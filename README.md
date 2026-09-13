@@ -1,4 +1,4 @@
-# Real-Time Helmet Detection and Text-to-Video Integration
+# Helmet Detection and Text-to-Video Integration
 
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-orange.svg)](https://pytorch.org/)
@@ -6,15 +6,15 @@
 [![HuggingFace Diffusers](https://img.shields.io/badge/HuggingFace-Diffusers-yellow.svg)](https://huggingface.co/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-An end-to-end Deep Learning pipeline that combines state-of-the-art **Computer Vision (YOLOv11)** for multi-class safety object detection with **Generative AI (Text-to-Video Diffusion Models)** to generate and analyze dynamic traffic scenarios in real time.
+An experimental pipeline that combines a fine-tuned **YOLOv11** helmet detector with a **text-to-video diffusion model** and applies the detector frame by frame to generated clips.
 
 ---
 
 ## 📌 Project Overview
 
 This project consists of two tightly integrated components:
-1. **Multi-Class Safety Object Detection**: A customized **YOLOv11** model trained to detect helmets, heads (with/without helmets), motorcycles, bicycles, and riders in dense, complex traffic environments.
-2. **Generative Scenario Synthesis & Video Inference**: Generating synthetic traffic and rider videos from natural language prompts using Hugging Face text-to-video diffusion pipelines, followed by automated real-time frame-by-frame inference.
+1. **Two-Class Safety Object Detection**: A customized **YOLOv11** model trained to classify heads as `With helmet` or `Without helmet`.
+2. **Generative Scenario Synthesis & Video Inference**: Four short synthetic rider clips generated from prompts, followed by automated frame-by-frame inference.
 
 ---
 
@@ -23,11 +23,7 @@ This project consists of two tightly integrated components:
 ### 1. Dataset & Annotation Pipeline
 - **Base Dataset**: [Kaggle Helmet Detection Dataset](https://www.kaggle.com/datasets/andrewmvd/helmet-detection).
 - **Split**: 764 total annotated images (611 Training / 153 Validation).
-- **Classes**:
-  - `Helmet` (with safety helmet)
-  - `Head` (without helmet)
-  - `Motorcycle` / `Bicycle`
-  - `Person` / `Rider`
+- **Classes**: `With helmet` and `Without helmet`.
 
 #### Sample Annotated Ground-Truth:
 ![Sample Dataset Annotation](results/dataset_annotation_sample.png)
@@ -47,6 +43,8 @@ This project consists of two tightly integrated components:
 | **mAP@0.5:0.95** | **0.52** |
 | **Precision** | **0.80** |
 | **Recall** | **0.80** |
+
+These metrics are the values recorded in the notebook for its 153-image validation split. The split is produced by a seeded image-level shuffle; results should therefore be read as an experiment on this split rather than a cross-dataset benchmark.
 
 #### Training Loss & Metric Curves:
 ![Training Curves](results/training_curves.png)
@@ -81,7 +79,7 @@ Using Hugging Face's `damo-vilab/text-to-video-ms-1.7b` diffusion model, synthet
 ---
 
 ### 2. Side-by-Side Video Inference Comparison
-The trained YOLOv11 detector performs real-time inference across all generated video frames, accurately identifying riders and helmets throughout dynamic motions:
+The detector is applied independently to each generated frame. The recorded clips are qualitative stress tests: one of four clips produced no detections, while the other three produced detections on 75–100% of frames. No end-to-end frames-per-second benchmark was recorded.
 
 #### Scenario 1: Highway Cruiser
 ![Video Comparison 1](results/video_detection_comparison_1.png)
@@ -102,6 +100,7 @@ The trained YOLOv11 detector performs real-time inference across all generated v
 ```
 Helmet_Detection_Text_to_Video/
 ├── helmet_detection_yolo.ipynb  # Comprehensive Notebook (Data Prep, Training, GenAI & Video Inference)
+├── requirements.txt             # Python dependencies
 ├── README.md                    # Project documentation & benchmark report
 ├── LICENSE                      # MIT Open-Source License
 ├── .gitignore                   # Standard DL/PyTorch ignore rules
@@ -122,7 +121,9 @@ Helmet_Detection_Text_to_Video/
 ### 1. Installation
 Clone the repository and install dependencies:
 ```bash
-pip install ultralytics diffusers transformers accelerate opencv-python imageio matplotlib
+python -m venv .venv
+source .venv/bin/activate  # Windows PowerShell: .venv\Scripts\Activate.ps1
+pip install -r requirements.txt
 ```
 
 ### 2. Running the Complete Pipeline
@@ -135,3 +136,5 @@ Follow the step-by-step cells to:
 2. Fine-tune / evaluate the YOLOv11 model.
 3. Synthesize videos via Hugging Face diffusion models.
 4. Run automated video inference and export comparison grids.
+
+The dataset, trained weights, and generated MP4 files are not stored in this repository. Update the notebook paths before running it locally. Generating the clips requires substantial GPU memory and downloads the diffusion model from Hugging Face.
